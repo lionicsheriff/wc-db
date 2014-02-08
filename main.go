@@ -55,6 +55,8 @@ func init() {
 	flag.StringVar(&annotationPattern, "annotation-pattern", annotationPattern, "Regexp for lines that don't count towards the total")
 	flag.StringVar(&annotationPattern, "a", annotationPattern, "alias for --anotation-pattern")
 
+	flag.StringVar(&ignoreFilePattern, "ignore-file-pattern", ignoreFilePattern, "Regexp for file names to ignore")
+
 	flag.StringVar(&headerFormat, "format-header", headerFormat, "Format for header line")
 	flag.StringVar(&itemFormat, "format-item", itemFormat, "Format for item line")
 }
