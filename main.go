@@ -84,6 +84,10 @@ func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Re
 		return
 	}
 
+	if abs_path == databasePath {
+		return
+	}
+
 	rel_path, err := filepath.Rel(base, abs_path)
 	if err != nil {
 		return
@@ -129,7 +133,11 @@ func main() {
 		log.Fatal("Bad annotation pattern")
 	}
 
-	basePath, _ := filepath.Abs(filepath.Dir(databasePath))
+	databasePath, err = filepath.Abs(databasePath) // switch databasePath to an absolute path. Makes it easier to deal with.
+	if err != nil {
+		log.Fatal("Bad database path")
+	}
+	basePath := filepath.Dir(databasePath) // used to calculate the documents location relative to the database
 
 	db, err := openDb(databasePath)
 	if err != nil {
