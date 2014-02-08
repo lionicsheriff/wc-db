@@ -81,8 +81,6 @@ func updateSchema(db *sql.DB) (err error) {
 	}
 
 	if err == nil {
-		log.Println(strconv.Itoa(len(schema)))
-		println(2)
 		_, err = db.Exec("pragma schema_version = " + strconv.Itoa(len(schema)))
 	}
 	return
