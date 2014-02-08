@@ -27,7 +27,6 @@ func (document *Document) Today() int {
 }
 
 var (
-	documentBase       = "."
 	documentPath       = []string{"."}
 	databasePath       = "./wc.db"
 	headerFormat       = "Total: #{total} Today: #{today}#{goal}"
@@ -40,9 +39,6 @@ var (
 )
 
 func init() {
-	flag.StringVar(&documentBase, "base", documentBase, "TODO")
-	flag.StringVar(&documentBase, "b", documentBase, "TODO")
-
 	flag.StringVar(&databasePath, "database", databasePath, "Path to database")
 	flag.StringVar(&databasePath, "d", databasePath, "Path to database")
 
