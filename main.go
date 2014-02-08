@@ -33,6 +33,7 @@ var (
 	goalFormat         = " Goal: #{target}(#{remaining})"
 	itemFormat         = "#{path}: #{total} (#{today})"
 	annotationPattern  = `#.*$`
+	ignoreFilePattern  = ""
 	goal               = 0
 	extensionBlacklist = []string{}
 	extensionWhitelist = []string{}
@@ -58,17 +59,21 @@ func init() {
 	flag.StringVar(&itemFormat, "format-item", itemFormat, "Format for item line")
 }
 
-func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, files DocumentMap) error {
+func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, skipRegexp *regexp.Regexp, files DocumentMap) error {
 	return filepath.Walk(documents, func(path string, info os.FileInfo, _ error) error {
 		if info.IsDir() {
 			return nil
 		}
-		countFile(path, base, db, annotationRegexp, files)
+		countFile(path, base, db, annotationRegexp, skipRegexp, files)
 		return nil
 	})
 }
 
-func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, files DocumentMap) (err error) {
+func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, skipRegexp *regexp.Regexp, files DocumentMap) (err error) {
+	if ignoreFilePattern != "" && skipRegexp.MatchString(path) {
+		return
+	}
+
 	words := countWords(path, annotationRegexp)
 	prev, err := getPreviousWordCount(db, path)
 	if err != nil {
@@ -133,6 +138,11 @@ func main() {
 		log.Fatal("Bad annotation pattern")
 	}
 
+	ignoreFileRegexp, err := regexp.Compile(ignoreFilePattern)
+	if err != nil {
+		log.Fatal("Bad file ignore pattern")
+	}
+
 	databasePath, err = filepath.Abs(databasePath) // switch databasePath to an absolute path. Makes it easier to deal with.
 	if err != nil {
 		log.Fatal("Bad database path")
@@ -156,9 +166,9 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else if fileMode.IsDir() {
-			countAll(path, basePath, db, annotationRegexp, files)
+			countAll(path, basePath, db, annotationRegexp, ignoreFileRegexp, files)
 		} else {
-			countFile(path, basePath, db, annotationRegexp, files)
+			countFile(path, basePath, db, annotationRegexp, ignoreFileRegexp, files)
 		}
 	}
 
