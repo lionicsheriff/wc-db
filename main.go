@@ -39,18 +39,23 @@ var (
 )
 
 func init() {
+	flag.Usage = func() {
+		executable := filepath.Base(os.Args[0])
+		fmt.Printf("Usage: %s [options] [path to documents...]:\n\n", executable)
+		flag.PrintDefaults()
+	}
+
 	flag.StringVar(&databasePath, "database", databasePath, "Path to database")
-	flag.StringVar(&databasePath, "d", databasePath, "Path to database")
+	flag.StringVar(&databasePath, "d", databasePath, "alias for --database")
 
-	flag.IntVar(&goal, "goal", goal, "TODO")
-	flag.IntVar(&goal, "g", goal, "TODO")
+	flag.IntVar(&goal, "goal", goal, "Number of words for daily goal")
+	flag.IntVar(&goal, "g", goal, "alias for --goal")
 
-	flag.StringVar(&annotationPattern, "annotation-pattern", annotationPattern, "TODO")
-	flag.StringVar(&annotationPattern, "a", annotationPattern, "TODO")
+	flag.StringVar(&annotationPattern, "annotation-pattern", annotationPattern, "Regexp for lines that don't count towards the total")
+	flag.StringVar(&annotationPattern, "a", annotationPattern, "alias for --anotation-pattern")
 
-	flag.StringVar(&headerFormat, "format-header", headerFormat, "TODO")
-	flag.StringVar(&itemFormat, "format-item", itemFormat, "TODO")
-
+	flag.StringVar(&headerFormat, "format-header", headerFormat, "Format for header line")
+	flag.StringVar(&itemFormat, "format-item", itemFormat, "Format for item line")
 }
 
 func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, files DocumentMap) error {
