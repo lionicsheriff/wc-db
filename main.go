@@ -76,16 +76,6 @@ func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Re
 		return
 	}
 
-	words := countWords(path, annotationRegexp)
-	prev, err := getPreviousWordCount(db, path)
-	if err != nil {
-		return
-	}
-	yesterday, err := getPreviousDayWordCount(db, path)
-	if err != nil {
-		return
-	}
-
 	abs_path, err := filepath.Abs(path)
 	if err != nil {
 		return
@@ -100,9 +90,22 @@ func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Re
 		return
 	}
 
+	words := countWords(abs_path, annotationRegexp)
+
+	prev, err := getPreviousWordCount(db, rel_path)
+	if err != nil {
+		return
+	}
+
+	yesterday, err := getPreviousDayWordCount(db, rel_path)
+	if err != nil {
+		return
+	}
+
 	if words != prev {
 		addWordCount(db, rel_path, words)
 	}
+
 	files[rel_path] = Document{Path: rel_path, Words: words, Prev: prev, Yesterday: yesterday}
 	return
 }
