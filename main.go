@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -38,6 +39,7 @@ var (
 	goal                   = 0
 	extensionBlacklist     = []string{}
 	extensionWhitelist     = []string{}
+	updateHook             = ""
 )
 
 func init() {
@@ -59,21 +61,23 @@ func init() {
 	flag.String("accept-file-pattern", "", "Regexp for file names to accept")
 	flag.String("ignore-file-pattern", "", "Regexp for file names to ignore")
 
+	flag.StringVar(&updateHook, "update-hook", updateHook, "External script to run whenever a word count changes for a file")
+
 	flag.StringVar(&headerFormat, "format-header", headerFormat, "Format for header line")
 	flag.StringVar(&itemFormat, "format-item", itemFormat, "Format for item line")
 }
 
-func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, files DocumentMap) error {
+func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, updateHook string, files DocumentMap) error {
 	return filepath.Walk(documents, func(path string, info os.FileInfo, _ error) error {
 		if info.IsDir() {
 			return nil
 		}
-		countFile(path, base, db, annotationRegexp, filePattern, filePatternIsWhitelist, files)
+		countFile(path, base, db, annotationRegexp, filePattern, filePatternIsWhitelist, updateHook, files)
 		return nil
 	})
 }
 
-func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, files DocumentMap) (err error) {
+func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, updateHook string, files DocumentMap) (err error) {
 	path = filepath.ToSlash(path)
 
 	if filePattern.String() != "" {
@@ -112,6 +116,11 @@ func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Re
 
 	if words != prev {
 		addWordCount(db, rel_path, words)
+
+		if updateHook != "" {
+			command := exec.Command(updateHook, rel_path, strconv.Itoa(words), strconv.Itoa(prev))
+			command.Run()
+		}
 	}
 
 	files[filepath.ToSlash(rel_path)] = Document{Path: rel_path, Words: words, Prev: prev, Yesterday: yesterday}
@@ -195,9 +204,9 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else if fileMode.IsDir() {
-			countAll(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, files)
+			countAll(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, updateHook, files)
 		} else {
-			countFile(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, files)
+			countFile(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, updateHook, files)
 		}
 	}
 
