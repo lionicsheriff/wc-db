@@ -92,12 +92,12 @@ FROM word_count
 WHERE path = ?
 AND timestamp < ?
 ORDER BY timestamp DESC
-LIMIT 1,1
+LIMIT 1
 `
 
 	normalisedPath := filepath.ToSlash(path)
 	y, m, d := time.Now().UTC().Date()
-	today := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	today := time.Date(y, m, d, 0, 0, 0, 0, time.UTC).Unix()
 	row := db.QueryRow(cmd, normalisedPath, today)
 	var wordsColumn string
 	err = row.Scan(&wordsColumn)
