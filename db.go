@@ -5,6 +5,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"strconv"
 	"time"
+	"path/filepath"
 )
 
 var schema = []string{
@@ -94,9 +95,10 @@ ORDER BY timestamp DESC
 LIMIT 1,1
 `
 
+	normalisedPath := filepath.ToSlash(path)
 	y, m, d := time.Now().UTC().Date()
 	today := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
-	row := db.QueryRow(cmd, path, today)
+	row := db.QueryRow(cmd, normalisedPath, today)
 	var wordsColumn string
 	err = row.Scan(&wordsColumn)
 	if err == sql.ErrNoRows {
@@ -118,8 +120,9 @@ INSERT INTO word_count (path, words, timestamp)
 VALUES (?, ?, ?)
 `
 
+	normalisedPath := filepath.ToSlash(path)
 	time := time.Now().UTC().Unix()
-	_, err = db.Exec(cmd, path, count, time)
+	_, err = db.Exec(cmd, normalisedPath, count, time)
 	return
 }
 
@@ -131,7 +134,8 @@ WHERE path = ?
 ORDER BY timestamp DESC
 LIMIT 1,1
 `
-	row := db.QueryRow(cmd, path)
+	normalisedPath := filepath.ToSlash(path)
+	row := db.QueryRow(cmd, normalisedPath)
 	var wordsColumn string
 	err = row.Scan(&wordsColumn)
 	if err == sql.ErrNoRows {

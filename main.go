@@ -106,7 +106,7 @@ func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Re
 		addWordCount(db, rel_path, words)
 	}
 
-	files[rel_path] = Document{Path: rel_path, Words: words, Prev: prev, Yesterday: yesterday}
+	files[filepath.ToSlash(rel_path)] = Document{Path: rel_path, Words: words, Prev: prev, Yesterday: yesterday}
 	return
 }
 
