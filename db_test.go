@@ -1,21 +1,21 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"io"
 	"fmt"
-	"regexp"
+	"io"
+	"os"
 	"path/filepath"
+	"regexp"
+	"testing"
 	"time"
 )
 
-var basePath,_ =filepath.Abs("./tests")
+var basePath, _ = filepath.Abs("./tests")
 
-func deleteFile(file string) (err error){
+func deleteFile(file string) (err error) {
 	err = os.Remove(file)
 
-	if (err != nil) {
+	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
 		} else {
@@ -27,18 +27,18 @@ func deleteFile(file string) (err error){
 }
 
 func copyFile(src string, dst string) (err error) {
-    sf, err := os.Open(src)
-    if err != nil {
-            return err
-    }
-    defer sf.Close()
-    df, err := os.Create(dst)
-    if err != nil {
-            return err
-    }
-    defer df.Close()
-    _,err = io.Copy(df, sf)
-    return err
+	sf, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sf.Close()
+	df, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer df.Close()
+	_, err = io.Copy(df, sf)
+	return err
 }
 
 func Test_InitDb(t *testing.T) {
@@ -62,7 +62,7 @@ func Test_WordCount(t *testing.T) {
 	annotationRegexp, _ := regexp.Compile("")
 	count := countWords("tests/docs/250.txt", annotationRegexp)
 
-	if(count != 250){
+	if count != 250 {
 		t.Error(fmt.Sprintf("word count incorrect: expected 250, got %d", count))
 	}
 
@@ -70,9 +70,9 @@ func Test_WordCount(t *testing.T) {
 
 func Test_WordCountWithAnnotation(t *testing.T) {
 	annotationRegexp, _ := regexp.Compile("#.*$")
-	count := countWords("tests/docs/201_with_49_annotated.txt",annotationRegexp)
+	count := countWords("tests/docs/201_with_49_annotated.txt", annotationRegexp)
 
-	if(count != 201){
+	if count != 201 {
 		t.Error(fmt.Sprintf("word count incorrect: expected 201, got %d", count))
 	}
 }
@@ -87,36 +87,36 @@ func Test_PrevCount(t *testing.T) {
 	// docs/250.txt history
 	// #|id|path            |words|timestamp
 	// -+--+----------------+-----+---------
-	// 2|2 |docs/250.txt    |50   |1        
-	// 3|3 |docs/250.txt    |100  |2        
-	// 4|4 |docs/250.txt    |150  |3        
-	// 5|5 |docs/250.txt    |200  |4    
+	// 2|2 |docs/250.txt    |50   |1
+	// 3|3 |docs/250.txt    |100  |2
+	// 4|4 |docs/250.txt    |150  |3
+	// 5|5 |docs/250.txt    |200  |4
 
 	// therefore the previous word count is *150*
-	count,err := getPreviousWordCount(db,"docs/250.txt");
-	if(err != nil){
+	count, err := getPreviousWordCount(db, "docs/250.txt")
+	if err != nil {
 		t.Error(fmt.Sprintf("could not retrieve previous word count: %s", err))
 	}
-	if(count != 150){
+	if count != 150 {
 		t.Error(fmt.Sprintf("prev count incorrect: expected 200, got %d", count))
 	}
 
 	// docs/201_with_49_annotated.txt history
 	// |id|path                           |words|timestamp
 	// -+--+------------------------------+-----+---------
-	// 1|1 |docs/201_with_49_annotated.txt|201  |1        
+	// 1|1 |docs/201_with_49_annotated.txt|201  |1
 
 	// therefore the previous word count is 0
-	count,err = getPreviousWordCount(db,"docs/201_with_49_annotated.txt");
-	if(err != nil){
+	count, err = getPreviousWordCount(db, "docs/201_with_49_annotated.txt")
+	if err != nil {
 		t.Error(fmt.Sprintf("could not retrieve previous word count: %s", err))
 	}
-	if(count != 0){
+	if count != 0 {
 		t.Error(fmt.Sprintf("prev count incorrect: expected 0, got %d", count))
 	}
 }
 
-func Test_AddWordCount(t *testing.T){
+func Test_AddWordCount(t *testing.T) {
 	dbPath := "tests/temp/addWordCount.db"
 	_ = deleteFile(dbPath)
 	copyFile("tests/testBase.db", dbPath)
@@ -126,30 +126,29 @@ func Test_AddWordCount(t *testing.T){
 	// docs/250.txt history
 	// #|id|path            |words|timestamp
 	// -+--+----------------+-----+---------
-	// 2|2 |docs/250.txt    |50   |1        
-	// 3|3 |docs/250.txt    |100  |2        
-	// 4|4 |docs/250.txt    |150  |3        
-	// 5|5 |docs/250.txt    |200  |4    
+	// 2|2 |docs/250.txt    |50   |1
+	// 3|3 |docs/250.txt    |100  |2
+	// 4|4 |docs/250.txt    |150  |3
+	// 5|5 |docs/250.txt    |200  |4
 
-	err:=addWordCount(db, "docs/250.txt", 250)
-	// 6|5 |docs/250.txt    |250  |<now>    
+	err := addWordCount(db, "docs/250.txt", 250)
+	// 6|5 |docs/250.txt    |250  |<now>
 	// therefore the previous word count is *200*
 
-	if(err != nil){
+	if err != nil {
 		t.Error(fmt.Sprintf("could not add word count: %s", err))
 	}
 
-
-	count,err := getPreviousWordCount(db,"docs/250.txt");
-	if(err != nil){
+	count, err := getPreviousWordCount(db, "docs/250.txt")
+	if err != nil {
 		t.Error(fmt.Sprintf("could not retrieve previous word count: %s", err))
 	}
-	if(count != 200){
+	if count != 200 {
 		t.Error(fmt.Sprintf("prev count incorrect: expected 200, got %d", count))
 	}
 }
 
-func Test_PreviousDayWordCount(t *testing.T){
+func Test_PreviousDayWordCount(t *testing.T) {
 	dbPath := "tests/temp/previousDayWordCount.db"
 	_ = deleteFile(dbPath)
 	copyFile("tests/testBase.db", dbPath)
@@ -159,34 +158,34 @@ func Test_PreviousDayWordCount(t *testing.T){
 	// docs/250.txt history
 	// #|id|path            |words|timestamp
 	// -+--+----------------+-----+---------
-	// 2|2 |docs/250.txt    |50   |1        
-	// 3|3 |docs/250.txt    |100  |2        
-	// 4|4 |docs/250.txt    |150  |3        
-	// 5|5 |docs/250.txt    |200  |4    
+	// 2|2 |docs/250.txt    |50   |1
+	// 3|3 |docs/250.txt    |100  |2
+	// 4|4 |docs/250.txt    |150  |3
+	// 5|5 |docs/250.txt    |200  |4
 
-	err:=addWordCount(db, "docs/250.txt", 250)
-	// 6|5 |docs/250.txt    |250  |<now>    
+	err := addWordCount(db, "docs/250.txt", 250)
+	// 6|5 |docs/250.txt    |250  |<now>
 
 	// we need to wait as timestamp + path has a unique constraint (to keep the db less cluttered)
 	time.Sleep(1 * time.Second)
-	err=addWordCount(db, "docs/250.txt", 300)
-	// 7|5 |docs/250.txt    |300  |<now>    
+	err = addWordCount(db, "docs/250.txt", 300)
+	// 7|5 |docs/250.txt    |300  |<now>
 
 	// therefore the previous day's word count is *200*
-	count,err := getPreviousDayWordCount(db,"docs/250.txt");
-	if(err != nil){
+	count, err := getPreviousDayWordCount(db, "docs/250.txt")
+	if err != nil {
 		t.Error(fmt.Sprintf("could not retrieve previous day's word count: %s", err))
 	}
-	if(count != 200){
+	if count != 200 {
 		t.Error(fmt.Sprintf("prev day's count incorrect: expected 200, got %d", count))
 	}
 
 	// and the previous word count is *250*
-	count,err = getPreviousWordCount(db,"docs/250.txt");
-	if(err != nil){
+	count, err = getPreviousWordCount(db, "docs/250.txt")
+	if err != nil {
 		t.Error(fmt.Sprintf("could not retrieve previous word count: %s", err))
 	}
-	if(count != 250){
+	if count != 250 {
 		t.Error(fmt.Sprintf("prev count incorrect: expected 250, got %d", count))
 	}
 }
@@ -203,16 +202,14 @@ func Test_DocumentLoad(t *testing.T) {
 	ignoreFileRegexp, _ := regexp.Compile("$^")
 
 	err := countFile("tests/docs/250.txt", basePath, db, annotationRegexp, ignoreFileRegexp, files)
-	if(err != nil){
-		t.Error(fmt.Sprintf("countFile failed: %s", err));
+	if err != nil {
+		t.Error(fmt.Sprintf("countFile failed: %s", err))
 	}
 
-
 	var doc = files["docs/250.txt"]
-	count := doc.Words;
+	count := doc.Words
 
-	if(count != 250){
+	if count != 250 {
 		t.Error(fmt.Sprintf("word count incorrect: expected 250, got %d", count))
 	}
 }
-

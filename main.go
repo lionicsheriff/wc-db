@@ -27,17 +27,17 @@ func (document *Document) Today() int {
 }
 
 var (
-	documentPath       = []string{"."}
-	databasePath       = "./wc.db"
-	headerFormat       = "Total: #{total} Today: #{today}#{goal}"
-	goalFormat         = " Goal: #{target}(#{remaining})"
-	itemFormat         = "#{path}: #{total} (#{today})"
-	annotationPattern  = `#.*$`
-	filePattern  = ""
+	documentPath           = []string{"."}
+	databasePath           = "./wc.db"
+	headerFormat           = "Total: #{total} Today: #{today}#{goal}"
+	goalFormat             = " Goal: #{target}(#{remaining})"
+	itemFormat             = "#{path}: #{total} (#{today})"
+	annotationPattern      = `#.*$`
+	filePattern            = ""
 	filePatternIsWhitelist = true
-	goal               = 0
-	extensionBlacklist = []string{}
-	extensionWhitelist = []string{}
+	goal                   = 0
+	extensionBlacklist     = []string{}
+	extensionWhitelist     = []string{}
 )
 
 func init() {
@@ -76,10 +76,10 @@ func countAll(documents string, base string, db *sql.DB, annotationRegexp *regex
 func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, files DocumentMap) (err error) {
 	path = filepath.ToSlash(path)
 
-	if (filePattern.String() != "") {
-		if filePatternIsWhitelist  && !filePattern.MatchString(path) {
+	if filePattern.String() != "" {
+		if filePatternIsWhitelist && !filePattern.MatchString(path) {
 			return
-		} else if !filePatternIsWhitelist  && filePattern.MatchString(path) {
+		} else if !filePatternIsWhitelist && filePattern.MatchString(path) {
 			return
 		}
 	}
@@ -145,16 +145,16 @@ func main() {
 	// these flags need to be checked after flags have been parsed as they are mutually exclusive
 	acceptPattern := flag.Lookup("accept-file-pattern").Value.String()
 	ignorePattern := flag.Lookup("ignore-file-pattern").Value.String()
-		fmt.Println("a:" + acceptPattern)
-		fmt.Println("i:" + ignorePattern)
+	fmt.Println("a:" + acceptPattern)
+	fmt.Println("i:" + ignorePattern)
 	if acceptPattern != "" && ignorePattern != "" {
 		log.Fatal("accept-file-pattern and ignore-file-pattern cannot be used together")
 	} else if acceptPattern != "" {
-		filePattern = acceptPattern;
-		filePatternIsWhitelist = true;
+		filePattern = acceptPattern
+		filePatternIsWhitelist = true
 	} else if ignorePattern != "" {
-		filePattern = ignorePattern;
-		filePatternIsWhitelist = false;
+		filePattern = ignorePattern
+		filePatternIsWhitelist = false
 	}
 
 	args := flag.Args()

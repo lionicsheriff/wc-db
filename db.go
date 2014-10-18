@@ -3,9 +3,9 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"path/filepath"
 	"strconv"
 	"time"
-	"path/filepath"
 )
 
 var schema = []string{
