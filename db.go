@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"strconv"
 	"time"
 )
@@ -70,7 +69,6 @@ func updateSchema(db *sql.DB) (err error) {
 	if version < len(schema) {
 		tx, err := db.Begin()
 		for _, cmd := range schema[version:] {
-			log.Print(cmd)
 			_, err = db.Exec(cmd)
 			if err != nil {
 				_ = tx.Rollback()
