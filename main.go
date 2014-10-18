@@ -33,7 +33,8 @@ var (
 	goalFormat         = " Goal: #{target}(#{remaining})"
 	itemFormat         = "#{path}: #{total} (#{today})"
 	annotationPattern  = `#.*$`
-	ignoreFilePattern  = ""
+	filePattern  = ""
+	filePatternIsWhitelist = true
 	goal               = 0
 	extensionBlacklist = []string{}
 	extensionWhitelist = []string{}
@@ -55,25 +56,32 @@ func init() {
 	flag.StringVar(&annotationPattern, "annotation-pattern", annotationPattern, "Regexp for lines that don't count towards the total")
 	flag.StringVar(&annotationPattern, "a", annotationPattern, "alias for --anotation-pattern")
 
-	flag.StringVar(&ignoreFilePattern, "ignore-file-pattern", ignoreFilePattern, "Regexp for file names to ignore")
+	flag.String("accept-file-pattern", "", "Regexp for file names to accept")
+	flag.String("ignore-file-pattern", "", "Regexp for file names to ignore")
 
 	flag.StringVar(&headerFormat, "format-header", headerFormat, "Format for header line")
 	flag.StringVar(&itemFormat, "format-item", itemFormat, "Format for item line")
 }
 
-func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, skipRegexp *regexp.Regexp, files DocumentMap) error {
+func countAll(documents string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, files DocumentMap) error {
 	return filepath.Walk(documents, func(path string, info os.FileInfo, _ error) error {
 		if info.IsDir() {
 			return nil
 		}
-		countFile(path, base, db, annotationRegexp, skipRegexp, files)
+		countFile(path, base, db, annotationRegexp, filePattern, filePatternIsWhitelist, files)
 		return nil
 	})
 }
 
-func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, skipRegexp *regexp.Regexp, files DocumentMap) (err error) {
-	if ignoreFilePattern != "" && skipRegexp.MatchString(path) {
-		return
+func countFile(path string, base string, db *sql.DB, annotationRegexp *regexp.Regexp, filePattern *regexp.Regexp, filePatternIsWhitelist bool, files DocumentMap) (err error) {
+	path = filepath.ToSlash(path)
+
+	if (filePattern.String() != "") {
+		if filePatternIsWhitelist  && !filePattern.MatchString(path) {
+			return
+		} else if !filePatternIsWhitelist  && filePattern.MatchString(path) {
+			return
+		}
 	}
 
 	abs_path, err := filepath.Abs(path)
@@ -133,6 +141,22 @@ func countWords(path string, annotationRegexp *regexp.Regexp) int {
 
 func main() {
 	flag.Parse()
+
+	// these flags need to be checked after flags have been parsed as they are mutually exclusive
+	acceptPattern := flag.Lookup("accept-file-pattern").Value.String()
+	ignorePattern := flag.Lookup("ignore-file-pattern").Value.String()
+		fmt.Println("a:" + acceptPattern)
+		fmt.Println("i:" + ignorePattern)
+	if acceptPattern != "" && ignorePattern != "" {
+		log.Fatal("accept-file-pattern and ignore-file-pattern cannot be used together")
+	} else if acceptPattern != "" {
+		filePattern = acceptPattern;
+		filePatternIsWhitelist = true;
+	} else if ignorePattern != "" {
+		filePattern = ignorePattern;
+		filePatternIsWhitelist = false;
+	}
+
 	args := flag.Args()
 	if len(args) > 0 {
 		documentPath = args
@@ -143,9 +167,9 @@ func main() {
 		log.Fatal("Bad annotation pattern")
 	}
 
-	ignoreFileRegexp, err := regexp.Compile(ignoreFilePattern)
+	filePatternRegexp, err := regexp.Compile(filePattern)
 	if err != nil {
-		log.Fatal("Bad file ignore pattern")
+		log.Fatal("Bad file pattern")
 	}
 
 	databasePath, err = filepath.Abs(databasePath) // switch databasePath to an absolute path. Makes it easier to deal with.
@@ -171,9 +195,9 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else if fileMode.IsDir() {
-			countAll(path, basePath, db, annotationRegexp, ignoreFileRegexp, files)
+			countAll(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, files)
 		} else {
-			countFile(path, basePath, db, annotationRegexp, ignoreFileRegexp, files)
+			countFile(path, basePath, db, annotationRegexp, filePatternRegexp, filePatternIsWhitelist, files)
 		}
 	}
 
