@@ -154,8 +154,6 @@ func main() {
 	// these flags need to be checked after flags have been parsed as they are mutually exclusive
 	acceptPattern := flag.Lookup("accept-file-pattern").Value.String()
 	ignorePattern := flag.Lookup("ignore-file-pattern").Value.String()
-	fmt.Println("a:" + acceptPattern)
-	fmt.Println("i:" + ignorePattern)
 	if acceptPattern != "" && ignorePattern != "" {
 		log.Fatal("accept-file-pattern and ignore-file-pattern cannot be used together")
 	} else if acceptPattern != "" {
