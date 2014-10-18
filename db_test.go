@@ -199,9 +199,9 @@ func Test_DocumentLoad(t *testing.T) {
 	_ = updateSchema(db)
 	var files = make(DocumentMap)
 	annotationRegexp, _ := regexp.Compile("")
-	ignoreFileRegexp, _ := regexp.Compile("$^")
+	filePatternRegexp, _ := regexp.Compile("")
 
-	err := countFile("tests/docs/250.txt", basePath, db, annotationRegexp, ignoreFileRegexp, files)
+	err := countFile("tests/docs/250.txt", basePath, db, annotationRegexp, filePatternRegexp, true, "", files)
 	if err != nil {
 		t.Error(fmt.Sprintf("countFile failed: %s", err))
 	}
